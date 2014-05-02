@@ -8,9 +8,9 @@ import sys
 import xml.etree.cElementTree as et
 import traceback
 
-import orphanlib.initialize as initialize
-import orphanlib.sqlite_interface as misc
-import orphanlib.meta as meta
+import lib.initialize as initialize
+import lib.sqlite_interface as misc
+import lib.meta as meta
 
 
 # ==================

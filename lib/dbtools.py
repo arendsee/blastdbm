@@ -4,9 +4,9 @@ import argparse
 import csv
 import sys
 
-import orphanlib.meta as meta
-import orphanlib.initialize as init
-import orphanlib.sqlite_interface as misc
+import lib.meta as meta
+import lib.initialize as init
+import lib.sqlite_interface as misc
 
 def parse(parent, *args, **kwargs):
     # Add blast database info to sql database

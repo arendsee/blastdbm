@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-import orphanlib.sqlite_interface as misc
+import lib.sqlite_interface as misc
 import traceback
 import sys
 

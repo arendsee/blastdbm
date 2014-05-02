@@ -3,7 +3,7 @@
 import argparse
 import sys
 import csv
-import orphanlib.sqlite_interface as misc
+import lib.sqlite_interface as misc
 import re
 import numpy
 import pandas

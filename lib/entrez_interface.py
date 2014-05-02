@@ -6,7 +6,7 @@ import re
 import xml.etree.ElementTree as et
 import sys
 import time
-from orphanlib.lineage import Lineage
+from lib.lineage import Lineage
 
 def BASE_URL():
     return('http://eutils.ncbi.nlm.nih.gov/entrez/eutils/{}.fcgi')

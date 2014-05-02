@@ -5,10 +5,10 @@ import sys
 from collections import defaultdict
 import traceback
 
-import orphanlib.sqlite_interface as misc
-import orphanlib.entrez_interface as entrez
-import orphanlib.initialize as initialize
-from   orphanlib.lineage import Lineage, MRCA
+import lib.sqlite_interface as misc
+import lib.entrez_interface as entrez
+import lib.initialize as initialize
+from   lib.lineage import Lineage, MRCA
 
 # ==================
 # EXPORTED FUNCTIONS
