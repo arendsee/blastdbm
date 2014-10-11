@@ -155,8 +155,9 @@ def init_besthits(cur, verbose=False):
     database NOT NULL,
 
     qgene,
-    qgb NOT NULL,
-    qgi NOT NULL,
+    qseqid NOT NULL,
+    qgb,
+    qgi,
     qlocus,
     qtaxon INTEGER,
     qlen   INTEGER NOT NULL,
@@ -219,15 +220,13 @@ def init_besthits(cur, verbose=False):
     CHECK (mpos   >= 0),
     CHECK (mscore >= 0)
 
-    PRIMARY KEY(database, qgb)
+    PRIMARY KEY(database, qseqid)
     """
 
     cmds = (
         "DROP TABLE IF EXISTS BestHits",
         "CREATE TABLE BestHits(" + BESTHITS_VAL + ")",
-        "CREATE INDEX qgene_idx  ON BestHits (qgene )",
-        "CREATE INDEX qlocus_idx ON BestHits (qlocus)",
-        "CREATE INDEX qgi_idx    ON BestHits (qgi   )"
+        "CREATE INDEX qseqid_idx  ON BestHits (qseqid)",
         )
     create_table(cur, cmds)
 

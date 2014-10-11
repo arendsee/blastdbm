@@ -93,6 +93,7 @@ def update_besthits(cur, con, verbose=False):
         initialize.init_besthits(cur, verbose)
     colmap = (
         ('blastoutput_db', 'database'),
+        ('query_seqid', 'qseqid'),
         ('query_gb', 'qgb'),
         ('Iteration_query_len', 'qlen'),
         ('query_gi', 'qgi'),
@@ -121,20 +122,11 @@ def update_besthits(cur, con, verbose=False):
             blastreport
         order by
             database,
-            qgb
+            qseqid
         """.format(selection)
     cur.execute(cmd)
 
     scol = [x[1] for x in colmap]
-
-    # FOR TESTING
-    # pathscorer = PathScorer()
-    # for pair in pair_generator(cur, scol):
-    #     phit, ps = pair.bestscore(pathscorer)
-    #     print(pair.col)
-    #     print(ps.dat)
-
-    # sys.exit()
 
     # There is a slight problem with the way I've been doing things Having my
     # only tie to the database be a cursor object does not allow me to read and
@@ -221,7 +213,7 @@ def row_generator(cur, col, scorers):
     values
     """
     for pair in pair_generator(cur, col):
-        out = {'database': pair.db, 'qgb': pair.qgb}
+        out = {'database': pair.db, 'qseqid': pair.qseqid}
         out['mevalue'] = pair.get_evalue()
         for k,v in pair.qdat.items():
             out[k] = v
@@ -433,7 +425,7 @@ class _Collection:
     def __init__(self, init=None):
         self.col = []
         self.db = None
-        self.qgb = None
+        self.qseqid = None
         self.qdat = {}
         if(init):
             self._first_item(init)
@@ -441,7 +433,7 @@ class _Collection:
     def _first_item(self, item):
         self.col = [item]
         self.db = item.db
-        self.qgb = item.qgb
+        self.qseqid = item.qseqid
         self.qdat = item.qdat
 
     def next(self):
@@ -503,7 +495,7 @@ class Hit(_Collection):
 
     @staticmethod
     def same_group(a, b):
-        if(a.col[0].db == b.col[0].db and a.col[0].qgb == b.col[0].qgb):
+        if(a.col[0].db == b.col[0].db and a.col[0].qseqid == b.col[0].qseqid):
             return True
         else:
             return False
@@ -517,8 +509,8 @@ class Hsp:
         try:
             data = {col[i]:row[i] for i in range(len(row))}
             self.db = data['database']
-            self.qgb = data['qgb']
-            self.qdat = {x:data[x] for x in ('qgi', 'qgene', 'qlocus', 'qtaxon', 'qlen')}
+            self.qseqid = data['qseqid']
+            self.qdat = {x:data[x] for x in ('qgi', 'qgb', 'qgene', 'qlocus', 'qtaxon', 'qlen')}
             self.hit = data['hit']
             self.hlen = data['hlen']
             self.mevalue = data['mevalue']
@@ -546,7 +538,7 @@ class Hsp:
 
     @staticmethod
     def same_group(a, b):
-        if(a.db == b.db and a.qgb == b.qgb and a.hit == b.hit):
+        if(a.db == b.db and a.qseqid == b.qseqid and a.hit == b.hit):
             return True
         else:
             return False
