@@ -20,14 +20,15 @@ import lib.meta as meta
 def parse(parent, *args, **kwargs):
     parser = parent.add_parser(
         'blast',
-        help="Convert BLAST report XML to SQL db",
-        parents=args,
-        description="stub")
+        help="Read BLAST XML report into SQL database",
+        parents=args)
     parser.add_argument(
         '-c', '--collection',
+        metavar="COL",
         help="blast collection")
     parser.add_argument(
         '-m', '--db_desc',
+        metavar="DESC",
         help="BLAST database description")
     parser.add_argument(
         '-s', '--small',
@@ -35,6 +36,7 @@ def parse(parent, *args, **kwargs):
         action=('store_true'), default=False)
     parser.add_argument(
         '-x', '--max-hits',
+        metavar="INT",
         help='Maximum number of hits to store (default 500)',
         type=int,
         default=500

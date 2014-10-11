@@ -5,7 +5,6 @@ import sys
 import csv
 import lib.sqlite_interface as misc
 import re
-import numpy
 import pandas
 
 # =========
