@@ -172,8 +172,7 @@ class Blastdat:
             self.dat['hit'][tag] = text
         elif('Iteration_' in tag):
             if(tag == 'Iteration_query_def'):
-                for key, val in _parse_fasta_header(text).items():
-                    self.dat['iter'][key] = val
+                self.dat['iter']['query_seqid'] = re.sub('(\S+).*', '\\1', text)
             self.dat['iter'][tag] = text
         elif('Statistics_' in tag):
             self.dat['stat'][tag] = text
