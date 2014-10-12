@@ -92,10 +92,10 @@ def parse(parent, *args, **kwargs):
         default=sys.stdout)
 
     # Retrieve the clade specificity of a single locus
-    spec = sub.add_parser(
-        'spec',
-        help="Get the clade specificity of a single sequence",
-        parents=(args + (_identifiers, _criterion, )))
+    # spec = sub.add_parser(
+    #     'spec',
+    #     help="Get the clade specificity of a single sequence",
+    #     parents=(args + (_identifiers, _criterion, )))
 
     # Retrieve phylostrata info for a list of loci
     phylo = sub.add_parser(
@@ -139,7 +139,7 @@ def _dispatch(args, cur):
     call = {'raw': _fetch_and_print,
             'mat': _get_mat,
             'phylo': _phylo,
-            'spec': _spec,
+            # 'spec': _spec,
             'maxattr': _get_maxattr}
     call[args.query_function](args, cur)
 
