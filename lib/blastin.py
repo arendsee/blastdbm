@@ -76,7 +76,7 @@ def _parse_blast_xml(args, cur, con):
             base = os.path.basename(elem.text)
             if(not misc.entry_exists('blastdatabase', 'database', base, cur)):
                 misc.insert({'database': base}, 'blastdatabase', cur)
-            bdat.add(elem.tag, elem.text)
+            bdat.add(elem.tag, base)
         else:
             bdat.add(elem.tag, elem.text)
     bdat.write_rows_to_sqldb()
