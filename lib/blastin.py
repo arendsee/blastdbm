@@ -44,6 +44,15 @@ def parse(parent, *args, **kwargs):
     parser.set_defaults(func=parse_blast_xml)
 
 def parse_blast_xml(args, cur):
+    try:
+        for f in args.input:
+            con = et.iterparse(f, events=('end', 'start'))
+            _parse_blast_xml(args, cur, con)
+    except AttributeError:
+        con = et.iterparse(args.input, events=('end', 'start'))
+        _parse_blast_xml(args, cur, con)
+
+def _parse_blast_xml(args, cur, con):
     # Initialize tables as necessary
     if(not misc.table_exists('blastreport', cur)):
         initialize.init_blastreport(cur, verbose=False)
@@ -51,7 +60,6 @@ def parse_blast_xml(args, cur):
         initialize.init_blastdatabase(cur, verbose=False)
 
     bdat = Blastdat(cur, args)
-    con = et.iterparse(args.input, events=('end', 'start'))
     for event, elem in con:
         if(event == 'start'): continue
         if(elem.tag == 'Hsp'):

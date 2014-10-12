@@ -28,6 +28,8 @@ def parser(argv=None):
     _input.add_argument(
         '-i', '--input',
         help="Input file (from stdin)",
+        type=argparse.FileType('r'),
+        nargs="*",
         metavar="FILE",
         default=sys.stdin)
 
