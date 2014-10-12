@@ -68,6 +68,12 @@ def parse(parent, *args, **kwargs):
         parents=(args + (kwargs['csv'], )),
         description="raw description stub")
     raw.add_argument(
+        '-H', '--header',
+        help="Print header",
+        action="store_true",
+        default=False
+    )
+    raw.add_argument(
         'sqlcmd',
         help="raw sql command (this function should be removed)")
 
@@ -148,6 +154,9 @@ def _phylo(args, cur):
 
 def _fetch_and_print(args, cur):
     rows = misc.fetch(args.sqlcmd, cur)
+    if args.header:
+        header = [x[0] for x in cur.description]
+        print(','.join(header))
     for row in rows:
         print((args.delimiter).join(map(str, row)))
 
