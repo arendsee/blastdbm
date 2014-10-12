@@ -9,7 +9,7 @@ import lib.meta              as meta
 import lib.query             as query
 import lib.dbtools           as tools
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 def parser(argv=None):
     # Top parser
@@ -21,7 +21,8 @@ def parser(argv=None):
     parser.add_argument(
         '-v', '--version',
         action='version',
-        version='%(prog)s {}'.format(__version__))
+        version='%(prog)s {}'.format(__version__)
+    )
 
     # Input parent parser
     _input = argparse.ArgumentParser(add_help=False)
@@ -30,24 +31,27 @@ def parser(argv=None):
         help="Input file (from stdin)",
         type=argparse.FileType('r'),
         nargs="*",
-        metavar="FILE",
-        default=sys.stdin)
+        metavar="FILE"
+    )
 
     _sqldb = argparse.ArgumentParser(add_help=False)
     _sqldb.add_argument(
         '-q', '--sqldb',
-        metavar="FILE",
-        help="SQL database name")
+        help="SQL database name",
+        metavar="FILE"
+    )
 
     _csv = argparse.ArgumentParser(add_help=False)
     _csv.add_argument(
         '--delimiter',
-        metavar="DEL",
         help="CSV file delimiter (default=',')",
-        default=',')
+        metavar="DEL",
+        default=','
+    )
 
     sub = parser.add_subparsers(
-        help='sub-command help')
+        help='sub-command help'
+    )
 
     # lib.blast parser
     blastin.parse(sub, _input, _sqldb)

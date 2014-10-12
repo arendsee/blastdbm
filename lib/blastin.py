@@ -46,9 +46,10 @@ def parse(parent, *args, **kwargs):
 def parse_blast_xml(args, cur):
     try:
         for f in args.input:
-            con = et.iterparse(f, events=('end', 'start'))
-            _parse_blast_xml(args, cur, con)
-    except AttributeError:
+            with et.iterparse(f, events=('end', 'start')) as con:
+                _parse_blast_xml(args, cur, con)
+    except TypeError:
+        args.input = sys.stdin
         con = et.iterparse(args.input, events=('end', 'start'))
         _parse_blast_xml(args, cur, con)
 
