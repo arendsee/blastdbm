@@ -44,6 +44,15 @@ def parse(parent, *args, **kwargs):
     parser.set_defaults(func=parse_blast_xml)
 
 def parse_blast_xml(args, cur):
+    try:
+        for f in args.input:
+            con = et.iterparse(f, events=('end', 'start'))
+            _parse_blast_xml(args, cur, con)
+    except AttributeError:
+        con = et.iterparse(args.input, events=('end', 'start'))
+        _parse_blast_xml(args, cur, con)
+
+def _parse_blast_xml(args, cur, con):
     # Initialize tables as necessary
     if(not misc.table_exists('blastreport', cur)):
         initialize.init_blastreport(cur, verbose=False)
@@ -51,7 +60,6 @@ def parse_blast_xml(args, cur):
         initialize.init_blastdatabase(cur, verbose=False)
 
     bdat = Blastdat(cur, args)
-    con = et.iterparse(args.input, events=('end', 'start'))
     for event, elem in con:
         if(event == 'start'): continue
         if(elem.tag == 'Hsp'):
@@ -68,7 +76,7 @@ def parse_blast_xml(args, cur):
             base = os.path.basename(elem.text)
             if(not misc.entry_exists('blastdatabase', 'database', base, cur)):
                 misc.insert({'database': base}, 'blastdatabase', cur)
-            bdat.add(elem.tag, elem.text)
+            bdat.add(elem.tag, base)
         else:
             bdat.add(elem.tag, elem.text)
     bdat.write_rows_to_sqldb()
@@ -172,8 +180,7 @@ class Blastdat:
             self.dat['hit'][tag] = text
         elif('Iteration_' in tag):
             if(tag == 'Iteration_query_def'):
-                for key, val in _parse_fasta_header(text).items():
-                    self.dat['iter'][key] = val
+                self.dat['iter']['query_seqid'] = re.sub('(\S+).*', '\\1', text)
             self.dat['iter'][tag] = text
         elif('Statistics_' in tag):
             self.dat['stat'][tag] = text

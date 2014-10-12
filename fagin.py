@@ -9,7 +9,7 @@ import lib.meta              as meta
 import lib.query             as query
 import lib.dbtools           as tools
 
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 
 def parser(argv=None):
     # Top parser
@@ -28,6 +28,8 @@ def parser(argv=None):
     _input.add_argument(
         '-i', '--input',
         help="Input file (from stdin)",
+        type=argparse.FileType('r'),
+        nargs="*",
         metavar="FILE",
         default=sys.stdin)
 

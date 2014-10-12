@@ -31,8 +31,8 @@ def parse(parent, *args, **kwargs):
     _identifiers.add_argument(
         '-e', '--identifier',
         help="Identifier choice",
-        choices=["gb", "gi", "locus"],
-        default="locus")
+        choices=["seqid", "gb", "gi", "locus"],
+        default="seqid")
     _identifiers.add_argument(
         '-f', '--from_file',
         help="Read identifiers from file")
@@ -68,6 +68,12 @@ def parse(parent, *args, **kwargs):
         parents=(args + (kwargs['csv'], )),
         description="raw description stub")
     raw.add_argument(
+        '-H', '--header',
+        help="Print header",
+        action="store_true",
+        default=False
+    )
+    raw.add_argument(
         'sqlcmd',
         help="raw sql command (this function should be removed)")
 
@@ -86,10 +92,10 @@ def parse(parent, *args, **kwargs):
         default=sys.stdout)
 
     # Retrieve the clade specificity of a single locus
-    spec = sub.add_parser(
-        'spec',
-        help="Get the clade specificity of a single sequence",
-        parents=(args + (_identifiers, _criterion, )))
+    # spec = sub.add_parser(
+    #     'spec',
+    #     help="Get the clade specificity of a single sequence",
+    #     parents=(args + (_identifiers, _criterion, )))
 
     # Retrieve phylostrata info for a list of loci
     phylo = sub.add_parser(
@@ -133,7 +139,7 @@ def _dispatch(args, cur):
     call = {'raw': _fetch_and_print,
             'mat': _get_mat,
             'phylo': _phylo,
-            'spec': _spec,
+            # 'spec': _spec,
             'maxattr': _get_maxattr}
     call[args.query_function](args, cur)
 
@@ -148,51 +154,68 @@ def _phylo(args, cur):
 
 def _fetch_and_print(args, cur):
     rows = misc.fetch(args.sqlcmd, cur)
+    if args.header:
+        header = [x[0] for x in cur.description]
+        print(','.join(header))
     for row in rows:
         print((args.delimiter).join(map(str, row)))
 
 def _get_mat(args, cur):
-    args.identifier = 'query_{}'.format(args.identifier)
-    queries = _get_identifiers(args, cur)
-
-    # Every element (locus or gb) must be a str (not a tuple, as can easily
-    # happen)
-    for x in queries:
-        assert isinstance(x, str), "Found {} expected string".format(str(type(x)))
-
     dbs = misc.get_db(cur)
-
-    mat = pandas.DataFrame(index=queries, columns=dbs)
 
     if(args.filling == 'hsp_evalue'):
         act = 'min'
     else:
         act = 'max'
-    d = {'d':'blastoutput_db',
-         'a':act,
-         'f':args.filling,
-         't':'blastreport',
-         'i':args.identifier,
-         'c':"and collection = '{}'".format(args.col) if args.col else "",
-         'v':'{}'}
-    cmd = "select {d}, {a}({f}) from {t} where {i} = '{v}' {c} group by {d}".format(**d)
 
-    for q in queries:
-        vals = misc.fetch(cmd.format(q), cur)
-        # A return value of none implies an iteration with no hits, this
-        # corresponds to a high evalue or a 0 score
-        if(args.filling == 'hsp_evalue'):
-            vals = [(x[0], 99) if x[1] is None else x for x in vals]
-        else:
-            vals = [(x[0], 0) if x[1] is None else x for x in vals]
-        for pair in vals:
-            mat.at[q, pair[0]] = pair[1]
+    if args.all:
+        d = {
+            'q':'query_seqid',
+            'd':'blastoutput_db',
+            'a':act,
+            'f':args.filling,
+            't':'blastreport',
+            'c':"and collection = '{}'".format(args.col) if args.col else ""}
+        cmd = "select {q}, {d}, {a}({f}) from {t} {c} group by {q},{d}".format(**d)
+        for row in misc.fetch(cmd, cur):
+            print(','.join(map(str, row)))
 
-    # Drop empty columns (databases outside collection)
-    mat = mat.dropna(axis=1, how='all')
+    else:
+        args.identifier = 'query_{}'.format(args.identifier)
+        queries = _get_identifiers(args, cur)
 
-    # Write output csv file
-    mat.to_csv(args.output)
+        # Every element (locus or gb) must be a str (not a tuple, as can easily
+        # happen)
+        for x in queries:
+            assert isinstance(x, str), "Found {} expected string".format(str(type(x)))
+
+        mat = pandas.DataFrame(index=queries, columns=dbs)
+
+        d = {'d':'blastoutput_db',
+            'a':act,
+            'f':args.filling,
+            't':'blastreport',
+            'i':args.identifier,
+            'c':"and collection = '{}'".format(args.col) if args.col else "",
+            'v':'{}'}
+        cmd = "select {d}, {a}({f}) from {t} where {i} = '{v}' {c} group by {d}".format(**d)
+
+        for q in queries:
+            vals = misc.fetch(cmd.format(q), cur)
+            # A return value of none implies an iteration with no hits, this
+            # corresponds to a high evalue or a 0 score
+            if(args.filling == 'hsp_evalue'):
+                vals = [(x[0], 99) if x[1] is None else x for x in vals]
+            else:
+                vals = [(x[0], 0) if x[1] is None else x for x in vals]
+            for pair in vals:
+                mat.at[q, pair[0]] = pair[1]
+
+        # Drop empty columns (databases outside collection)
+        mat = mat.dropna(axis=1, how='all')
+
+        # Write output csv file
+        mat.to_csv(args.output)
 
 def _phylo_json(qdat, pathway):
     # Write output in JSON format

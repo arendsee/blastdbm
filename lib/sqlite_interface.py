@@ -78,7 +78,8 @@ def open_db(filename):
 def get_query_info(ident, value, cur):
     value = _quote(value)
     ident = _ident2field(ident)
-    fields = (('query_locus','locus'),
+    fields = (('query_seqid','seqid'),
+              ('query_locus','locus'),
               ('query_taxon','taxon'),
               ('query_gi','gi'),
               ('query_gb','gb'),
@@ -216,7 +217,7 @@ def _prepare_simple_select(fields, table, condition, cur, is_distinct=False):
     return(result)
 
 def _ident2field(ident):
-    if(ident in ('gb', 'gi', 'locus')):
+    if(ident in ('seqid', 'gb', 'gi', 'locus')):
         ident = "query_{}".format(ident)
     return(ident)
 

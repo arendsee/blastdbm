@@ -37,10 +37,10 @@ def init_blastreport(cur, verbose=False):
         Statistics_lambda    REAL,
         Statistics_entropy   REAL,
 
-        -- Query data, parsed, if possible, from the fasta header
+        Query_seqid TEXT NOT NULL COLLATE NOCASE,
         Query_locus TEXT COLLATE NOCASE,
-        Query_gi    TEXT NOT NULL,
-        Query_gb    TEXT NOT NULL COLLATE NOCASE,
+        Query_gi    TEXT ,
+        Query_gb    TEXT COLLATE NOCASE,
         Query_gene  TEXT COLLATE NOCASE,
         Query_taxon TEXT,
 
@@ -97,16 +97,13 @@ def init_blastreport(cur, verbose=False):
         CHECK(Hsp_align_len >= 0),
         CHECK(Hsp_gaps >= 0)
 
-        PRIMARY KEY(blastoutput_db, query_gb, hit_num, hsp_num)
+        PRIMARY KEY(blastoutput_db, query_seqid, hit_num, hsp_num)
         """
 
     cmds = (
         "DROP TABLE IF EXISTS BlastReport",
         "CREATE TABLE BlastReport(" + BLAST_VAL + ")",
-        "CREATE INDEX query_gene_idx ON BlastReport (query_gene)",
-        "CREATE INDEX query_locus_idx ON BlastReport (query_locus)",
-        "CREATE INDEX query_gi_idx ON BlastReport (query_gi)",
-        "CREATE INDEX query_gb_idx ON BlastReport (query_gb)",
+        "CREATE INDEX query_seqid_idx ON BlastReport (query_seqid)",
         "CREATE INDEX Iteration_iter_num_idx ON BlastReport (Iteration_iter_num)")
     create_table(cur, cmds)
 
@@ -158,8 +155,9 @@ def init_besthits(cur, verbose=False):
     database NOT NULL,
 
     qgene,
-    qgb NOT NULL,
-    qgi NOT NULL,
+    qseqid NOT NULL,
+    qgb,
+    qgi,
     qlocus,
     qtaxon INTEGER,
     qlen   INTEGER NOT NULL,
@@ -222,15 +220,13 @@ def init_besthits(cur, verbose=False):
     CHECK (mpos   >= 0),
     CHECK (mscore >= 0)
 
-    PRIMARY KEY(database, qgb)
+    PRIMARY KEY(database, qseqid)
     """
 
     cmds = (
         "DROP TABLE IF EXISTS BestHits",
         "CREATE TABLE BestHits(" + BESTHITS_VAL + ")",
-        "CREATE INDEX qgene_idx  ON BestHits (qgene )",
-        "CREATE INDEX qlocus_idx ON BestHits (qlocus)",
-        "CREATE INDEX qgi_idx    ON BestHits (qgi   )"
+        "CREATE INDEX qseqid_idx  ON BestHits (qseqid)",
         )
     create_table(cur, cmds)
 

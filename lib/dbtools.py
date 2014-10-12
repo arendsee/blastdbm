@@ -34,7 +34,7 @@ def parse(parent, *args, **kwargs):
     dump_parser = parent.add_parser(
         'dump',
         parents=args,
-        help="Dump tables in various ways...")
+        help="Dump tables in various ways (currently only --mrca is implemented)")
     dump_parser.add_argument(
         '--mrca',
         help="Dumps MRCA data relative to given taxon id")
@@ -46,16 +46,20 @@ def update(args, cur, con=None):
     meta.update_besthits(cur, con)
 
 def dump_dbinfo(args, cur):
-    dfields = ('database', 'species', 'taxid')
-    dtable = 'blastdatabase'
-    res1 = misc.get_fields(dfields, dtable, cur)
-    mfields = ('mrca', 'phylostratum')
-    cmd = 'select {} from mrca where taxid_1 = {} and taxid_2 = {}'.format(
-            ', '.join(mfields), args.mrca, '{}')
-    c = csv.writer(sys.stdout)
-    c.writerow(('Database', 'Species', 'Taxid', 'MRCA_Taxid', 'Stratum', 'MRCA_Name'))
-    for line in res1:
-        mrca = misc.fetch(cmd.format(line[2]), cur)[0]
-        mrca_cmd = "select sciname from taxid2name where taxid = {}"
-        mrca_name = misc.fetch(mrca_cmd.format(mrca[0]), cur)[0][0]
-        c.writerow(line + mrca + (mrca_name, ))
+    if args.mrca:
+        dfields = ('database', 'species', 'taxid')
+        dtable = 'blastdatabase'
+        res1 = misc.get_fields(dfields, dtable, cur)
+        mfields = ('mrca', 'phylostratum')
+        cmd = 'select {} from mrca where taxid_1 = {} and taxid_2 = {}'.format(
+                ', '.join(mfields), args.mrca, '{}')
+        c = csv.writer(sys.stdout)
+        c.writerow(('Database', 'Species', 'Taxid', 'MRCA_Taxid', 'Stratum', 'MRCA_Name'))
+        for line in res1:
+            try:
+                mrca = misc.fetch(cmd.format(line[2]), cur)[0]
+            except IndexError:
+                sys.exit("Invalid taxonid (must be a leaf taxon)")
+            mrca_cmd = "select sciname from taxid2name where taxid = {}"
+            mrca_name = misc.fetch(mrca_cmd.format(mrca[0]), cur)[0][0]
+            c.writerow(line + mrca + (mrca_name, ))
