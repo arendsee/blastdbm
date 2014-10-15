@@ -44,13 +44,12 @@ def parse(parent, *args, **kwargs):
     parser.set_defaults(func=parse_blast_xml)
 
 def parse_blast_xml(args, cur):
-    try:
+    if args.input:
         for f in args.input:
-            with et.iterparse(f, events=('end', 'start')) as con:
-                _parse_blast_xml(args, cur, con)
-    except TypeError:
-        args.input = sys.stdin
-        con = et.iterparse(args.input, events=('end', 'start'))
+            con = et.iterparse(f, events=('end', 'start'))
+            _parse_blast_xml(args, cur, con)
+    else:
+        con = et.iterparse(sys.stdin, events=('end', 'start'))
         _parse_blast_xml(args, cur, con)
 
 def _parse_blast_xml(args, cur, con):
