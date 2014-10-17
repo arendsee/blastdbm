@@ -74,6 +74,8 @@ if __name__ == '__main__':
         # Pass arguments to proper sub-command
         cur = con.cursor()
         cur.execute('pragma shrink_memory')
+        cur.execute('pragma synchronous=OFF')
+        cur.execute('pragma journal_mode=memory')
 
         # This is kind of a dirty hack, but I need two cursors, one for select on
         # for insert in update_besthits. So I need to send in the con not just the
