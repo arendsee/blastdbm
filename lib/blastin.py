@@ -12,11 +12,6 @@ import lib.initialize as initialize
 import lib.sqlite_interface as misc
 import lib.meta as meta
 
-
-# ==================
-# EXPORTED FUNCTIONS
-# ==================
-
 def parse(parent, *args, **kwargs):
     parser = parent.add_parser(
         'blast',
@@ -27,10 +22,10 @@ def parse(parent, *args, **kwargs):
 def parse_blast_xml(args, cur):
     try:
         for f in args.input:
-            con = et.iterparse(f, events=('end', 'start'))
+            con = et.iterparse(f, events=('end',))
             _parse_blast_xml(args, cur, con)
     except AttributeError:
-        con = et.iterparse(args.input, events=('end', 'start'))
+        con = et.iterparse(args.input, events=('end',))
         _parse_blast_xml(args, cur, con)
 
 def _parse_blast_xml(args, cur, con):
@@ -48,24 +43,24 @@ def _parse_blast_xml(args, cur, con):
     hsp = Hsp(cur)
 
     for event, elem in con:
-        if event == "end":
-            if elem.tag in hsp.fields:
-                hsp.add(elem.tag, elem.text)
-            elif elem.tag in hit.fields:
-                hit.add(elem.tag, elem.text)
-            elif elem.tag in iteration.fields:
-                iteration.add(elem.tag, elem.text)
-            elif elem.tag in database.fields:
-                database.add(elem.tag, elem.text)
-        elif event == "start":
+        if elem.tag in hsp.fields:
+            hsp.add(elem.tag, elem.text)
+        elif elem.tag in hit.fields:
+            hit.add(elem.tag, elem.text)
+        elif elem.tag in iteration.fields:
+            iteration.add(elem.tag, elem.text)
+        elif elem.tag in database.fields:
+            database.add(elem.tag, elem.text)
+            if elem.tag == 'BlastOutput_db':
+                iteration.db = database.db
+        elif elem.tag in {'Hsp', 'Iteration', 'BlastOutput'}:
             if elem.tag == "Hsp":
-                hsp.new_entry(hit=hit, iteration=iteration)
-            elif elem.tag == "Hit":
-                hit.new_entry()
+                hsp.enter(hit=hit, iteration=iteration)
             elif elem.tag == "Iteration":
-                iteration.new_entry(database=database)
+                iteration.enter(database=database)
+                elem.clear()
             elif elem.tag == "BlastOutput":
-                database.new_entry()
+                database.enter()
 
 
 class Table:
@@ -89,11 +84,16 @@ class Table:
         except KeyError:
             pass
 
+    def enter(self):
+        self._enter()
+        self.entry = dict()
+
     def _enter(self):
         if not self.entry:
             return
         try:
             self.entries.append([self.entry[k] for k in self.ordered_fields])
+            self.entry = dict()
             if len(self.entries) == self.commit_size:
                 self.commit()
         except KeyError:
@@ -110,10 +110,6 @@ class Table:
                         replace=True)
         self.entries = []
 
-    def new_entry(self):
-        self._enter()
-        self.entry = dict()
-
 class Hit():
     def __init__(self):
         self.entry = dict()
@@ -128,9 +124,6 @@ class Hit():
         if key == 'Hit_def':
             self.entry['sseqid'] = re.match('\S+', val).group(0)
         self.entry[key] = val
-
-    def new_entry(self):
-        self.entry = dict()
 
 class Hsp(Table):
     def __init__(self, cur):
@@ -160,18 +153,14 @@ class Hsp(Table):
         self.colnames = [re.sub('Hsp_num', 'hsp_num', s) for s in self.colnames]
         self.colnames = [re.sub('Hsp_', '', s) for s in self.colnames]
 
-
-    def new_entry(self, hit, iteration):
-        if self.entry:
-            self._enter()
-        self.entry = {
-            'db':iteration.entry['db'],
-            'qseqid':iteration.entry['qseqid'],
-            'qlen':iteration.entry['Iteration_query-len'],
-            'hlen':hit.entry['Hit_len'],
-            'sseqid':hit.entry['sseqid'],
-            'hit_num':hit.entry['Hit_num']
-        }
+    def enter(self, hit, iteration):
+        self.entry['db']      = iteration.db
+        self.entry['qseqid']  = iteration.qseqid
+        self.entry['qlen']    = iteration.qlen
+        self.entry['hlen']    = hit.entry['Hit_len']
+        self.entry['sseqid']  = hit.entry['sseqid']
+        self.entry['hit_num'] = hit.entry['Hit_num']
+        self._enter()
 
 class Iteration(Table):
     def __init__(self, cur):
@@ -192,22 +181,24 @@ class Iteration(Table):
             'Statistics_entropy'
         }
         super().__init__(cur=cur, table='Iteration', fields=fields)
+        self.db = None
+        self.qseqid = None
+        self.qlen = None
 
     def add(self, key, val):
         if key == 'Iteration_query-def':
-            self.entry['qseqid'] = re.match('\S+', val).group(0)
+            self.qseqid = re.match('\S+', val).group(0)
+            self.entry['qseqid'] = self.qseqid
+        elif key == 'Iteration_query-len':
+            self.qlen = val
         self.entry[key] = val
 
-    def new_entry(self, database):
-        if self.entry:
-            self._enter()
-        self.entry = {
-            'db':database.entry['BlastOutput_db'],
-            'Iteration_message':''
-        }
+    def enter(self, database):
+        self.entry['db'] = self.db
+        self.entry['Iteration_message'] = ''
+        self._enter()
 
 class Database(Table):
-
     def __init__(self, cur):
         fields = {
             'BlastOutput_db',
@@ -221,9 +212,11 @@ class Database(Table):
         }
         super().__init__(cur=cur, table='Database', fields=fields)
         self.colnames = sorted([re.sub('BlastOutput_db', 'db', s) for s in self.colnames])
+        self.db = None
 
     def add(self, key, val):
         if key == 'BlastOutput_db':
-            self.entry[key] = re.sub('\..*$', '', os.path.basename(val))
+            self.db = re.sub('\..*$', '', os.path.basename(val))
+            self.entry[key] = self.db
         else:
             self.entry[key] = val
