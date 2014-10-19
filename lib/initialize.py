@@ -12,26 +12,27 @@ def init_hsp(cur, verbose=False):
     VAL = """
         db     TEXT NOT NULL COLLATE NOCASE,
         qseqid TEXT NOT NULL COLLATE NOCASE,
-        hseqid TEXT NOT NULL COLLATE NOCASE,
+        sseqid TEXT NOT NULL COLLATE NOCASE,
+        qlen INTEGER DEFAULT 0,
 
-        Hit_num       INTEGER DEFAULT 0,
-        Hit_len       INTEGER,
-        Hsp_num         INTEGER DEFAULT 0,
-        Hsp_bit_score   REAL DEFAULT 0,
-        Hsp_score       REAL DEFAULT 0,
-        Hsp_evalue      REAL,
-        Hsp_query_from  INTEGER,
-        Hsp_query_to    INTEGER,
-        Hsp_hit_from    INTEGER,
-        Hsp_hit_to      INTEGER,
-        Hsp_query_frame INTEGER,
-        Hsp_hit_frame   INTEGER,
-        Hsp_identity    INTEGER DEFAULT 0,
-        Hsp_positive    INTEGER DEFAULT 0,
-        Hsp_align_len   INTEGER DEFAULT 0,
-        Hsp_gaps        INTEGER DEFAULT 0,
+        hit_num     INTEGER DEFAULT 0,
+        hlen        INTEGER,
+        hsp_num     INTEGER DEFAULT 0,
+        bit_score   REAL DEFAULT 0,
+        score       REAL DEFAULT 0,
+        evalue      REAL,
+        query_from  INTEGER,
+        query_to    INTEGER,
+        hit_from    INTEGER,
+        hit_to      INTEGER,
+        query_frame INTEGER,
+        hit_frame   INTEGER,
+        identity    INTEGER DEFAULT 0,
+        positive    INTEGER DEFAULT 0,
+        align_len   INTEGER DEFAULT 0,
+        gaps        INTEGER DEFAULT 0,
 
-        PRIMARY KEY(db, qseqid, Hit_num, Hsp_num)
+        PRIMARY KEY(db, qseqid, hit_num, hsp_num)
     """
 
     diagnostics = """
@@ -115,6 +116,7 @@ def init_database(cur, verbose=False):
         "DROP TABLE IF EXISTS database",
         "CREATE TABLE database(" + VAL + ")")
     create_table(cur, cmds)
+
 
 # =================
 # UTILITY FUNCTIONS
