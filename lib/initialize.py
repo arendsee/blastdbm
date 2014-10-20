@@ -54,7 +54,10 @@ def init_hsp(cur, verbose=False):
 
     cmds = (
         "DROP TABLE IF EXISTS hsp",
-        "CREATE TABLE hsp(" + VAL + ")"
+        "CREATE TABLE hsp(" + VAL + ")",
+        "CREATE INDEX hsp_qseqid ON hsp(qseqid)",
+        "CREATE INDEX hsp_db ON hsp(db)",
+        "CREATE INDEX hsp_sseqid ON hsp(sseqid)"
     )
     create_table(cur, cmds)
 
@@ -91,12 +94,14 @@ def init_iteration(cur, verbose=False):
 
     cmds = (
         "DROP TABLE IF EXISTS iteration",
-        "CREATE TABLE iteration(" + VAL + ")")
+        "CREATE TABLE iteration(" + VAL + ")",
+        "CREATE INDEX iteration_qseqid on iteration(qseqid)"
+    )
     create_table(cur, cmds)
 
 def init_database(cur, verbose=False):
     VAL = """
-        db                    TEXT PRIMARY KEY,
+        db                    TEXT,
         BlastOutput_program   TEXT NOT NULL COLLATE NOCASE,
         BlastOutput_version   TEXT NOT NULL COLLATE NOCASE,
         Parameters_matrix     TEXT NOT NULL COLLATE NOCASE,
